@@ -1,6 +1,5 @@
 package de.tobiasgrether.university.week01;
 
-import de.tobiasgrether.university.utils.QuadFunction;
 import de.tobiasgrether.university.utils.TriFunction;
 
 public class Task9 {
