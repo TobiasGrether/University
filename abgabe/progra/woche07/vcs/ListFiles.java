@@ -1,5 +1,3 @@
-package de.tobiasgrether.university.week07;
-
 public non-sealed class ListFiles extends Command {
 
     public ListFiles(VCS vcs) {

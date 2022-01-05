@@ -1,5 +1,3 @@
-package de.tobiasgrether.university.week07;
-
 public sealed class Command permits Exit, ListFiles {
 
     protected final VCS vcs;

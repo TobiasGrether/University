@@ -1,5 +1,3 @@
-package de.tobiasgrether.university.week07;
-
 public class Commit extends ListFiles implements Command.Modifying {
 
     public Commit(VCS vcs) {
