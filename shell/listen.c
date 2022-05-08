@@ -383,9 +383,7 @@ int main(void)
     {
         sort_data *lastNameOrdered = replicateOrdered(studenten_liste, &compareStudentsByLastName);
         test_dump_ordered(lastNameOrdered);
-
-        /* stud_type *lastNameOrdered = replicateOrdered(studenten_liste, &compareStudentsByLastName);
-        test_dump(lastNameOrdered);*/
+        
         /* Erzeuge sortierte Liste nach Nachname */
         /* Gebe Liste aus */
         /* Räume erzeugte Liste auf */
