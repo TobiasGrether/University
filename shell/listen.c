@@ -373,7 +373,6 @@ int main(void)
     test_dump(studenten_liste);
 
     {
-        printf("test \n");
         sort_data *firstNameOrdered = replicateOrdered(studenten_liste, &compareStudentsByFirstName);
         test_dump_ordered(firstNameOrdered);
         /* Erzeuge sortierte Liste nach Vorname */
