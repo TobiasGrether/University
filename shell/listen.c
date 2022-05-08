@@ -12,10 +12,118 @@ typedef struct stud_type
     struct stud_type *next;
 } stud_type;
 
+typedef struct sort_data
+{
+    struct stud_type *value;
+    struct sort_data *next;
+} sort_data;
+
 /* Ist die Datenbank leer?      */
 bool is_empty(stud_type const *liste)
 {
     return !liste;
+}
+
+bool enqueueOrdered0(stud_type **studenten_liste, stud_type *student, int (*compare)(stud_type *, stud_type *))
+{
+    if (is_empty(*studenten_liste))
+    {
+        *studenten_liste = student;
+    }
+    else
+    {
+
+        if (compare(*studenten_liste, student) == 1) // das erste element ist größer als das neue - ersetzen
+        {
+            student->next = *studenten_liste;
+            *studenten_liste = student;
+            return true;
+        }
+        stud_type *current = *studenten_liste;
+
+        while (current)
+        {
+            if (current->next)
+            {
+                if (compare(current->next, student) == 1)
+                { // Zwischen den Elementen einfügen - Das nächste Element ist upper bound
+                    student->next = current->next;
+                    current->next = student;
+                    return true;
+                }
+            }
+            else
+            { // Letztes Element der Liste
+                current->next = student;
+                return true;
+            }
+            current = current->next;
+        }
+    }
+
+    return false;
+}
+// Because I'm notoriously lazy, we'll just copy the entire method again
+bool enqueueOrderedDataPoint(sort_data **list, sort_data *new_datapoint, int (*compare)(stud_type *, stud_type *))
+{
+    if (!(*list))
+    {
+        *list = new_datapoint;
+    }
+    else
+    {
+
+        if (compare((*list)->value, new_datapoint->value) == 1) // das erste element ist größer als das neue - ersetzen
+        {
+            new_datapoint->next = *list;
+            *list = new_datapoint;
+            return true;
+        }
+        sort_data *current = *list;
+
+        while (current)
+        {
+            if (current->next)
+            {
+                if (compare(current->next->value, new_datapoint->value) == 1)
+                { // Zwischen den Elementen einfügen - Das nächste Element ist upper bound
+                    new_datapoint->next = current->next;
+                    current->next = new_datapoint;
+                    return true;
+                }
+            }
+            else
+            { // Letztes Element der Liste
+                current->next = new_datapoint;
+                return true;
+            }
+            current = current->next;
+        }
+    }
+
+    return false;
+}
+
+static int compareStudentsByMatNum(stud_type *student1, stud_type *student2)
+{
+    if (student1->matnum > student2->matnum)
+    {
+        return 1;
+    }
+    else
+    {
+        return student1->matnum == student2->matnum ? 0 : -1;
+    }
+}
+
+static int compareStudentsByFirstName(stud_type *student1, stud_type *student2)
+{
+    return strcmp(student1->vorname, student2->vorname);
+}
+
+static int compareStudentsByLastName(stud_type *student1, stud_type *student2)
+{
+    return strcmp(student1->nachname, student2->nachname);
 }
 
 /* Einfuegen eines Elementes
@@ -37,45 +145,13 @@ bool enqueue(stud_type **studenten_liste, int matnum, char const vorname[20], ch
     strcpy(student->nachname, nachname);
     student->next = NULL;
 
+    bool result = enqueueOrdered0(studenten_liste, student, &compareStudentsByMatNum);
+
+    return result;
+
     /* Füge den neuen Eintrag in die Liste ein */
 
     /* Ist die Liste leer ? */
-    if (is_empty(*studenten_liste))
-    {
-        *studenten_liste = student;
-    }
-    else
-    {
-
-        if ((*studenten_liste)->matnum > matnum) // das erste element ist größer als das neue - ersetzen
-        {
-            student->next = *studenten_liste;
-            *studenten_liste = student;
-            return true;
-        }
-        stud_type *current = *studenten_liste;
-
-        while (current)
-        {
-            if (current->next)
-            {
-                if (current->next->matnum > matnum)
-                { // Zwischen den Elementen einfügen - Das nächste Element ist upper bound
-                    student->next = current->next;
-                    current->next = student;
-                    return true;
-                }
-            }
-            else
-            { // Letztes Element der Liste
-                current->next = student;
-                return true;
-            }
-            current = current->next;
-        }
-    }
-
-    return false;
 
     /* Sortier den Studenten aufsteigend nach Matrikelnummer ein (matrikelnummern sind einzigartig) */
 }
@@ -242,6 +318,35 @@ static void test_dump(stud_type const *liste)
     }
 }
 
+static void test_dump_ordered(sort_data const *liste)
+{
+    printf(">>> Gebe alle erfassten Studenten aus ...\n");
+    for (sort_data const *curr = liste; curr; curr = curr->next)
+    {
+        printf("    Matrikelnummer %4i: %s %s\n", curr->value->matnum, curr->value->vorname, curr->value->nachname);
+    }
+}
+
+static sort_data *replicateOrdered(stud_type *origin_list, int (*compare)(stud_type *, stud_type *))
+{
+
+    if (is_empty(origin_list))
+        return NULL;
+
+    sort_data *list_head = NULL;
+
+    for (stud_type *curr = origin_list; curr; curr = curr->next)
+    {
+        sort_data *data_point = malloc(sizeof(sort_data));
+        data_point->value = curr;
+        data_point->next = NULL;
+
+        enqueueOrderedDataPoint(&list_head, data_point, compare);
+    }
+
+    return list_head;
+}
+
 /* Test der Listenfunktionen  */
 int main(void)
 {
@@ -264,15 +369,24 @@ int main(void)
     test_enqueue(&studenten_liste, 1289, "Viserys", "Targaryen");
     test_dequeue(&studenten_liste, 5678);
     test_enqueue(&studenten_liste, 1, "Tywin", "Lannister");
+    test_enqueue(&studenten_liste, 2, "ABC", "Z");
     test_dump(studenten_liste);
 
     {
+        printf("test \n");
+        sort_data *firstNameOrdered = replicateOrdered(studenten_liste, &compareStudentsByFirstName);
+        test_dump_ordered(firstNameOrdered);
         /* Erzeuge sortierte Liste nach Vorname */
         /* Gebe Liste aus */
         /* Räume erzeugte Liste auf */
     }
 
     {
+        sort_data *lastNameOrdered = replicateOrdered(studenten_liste, &compareStudentsByLastName);
+        test_dump_ordered(lastNameOrdered);
+
+        /* stud_type *lastNameOrdered = replicateOrdered(studenten_liste, &compareStudentsByLastName);
+        test_dump(lastNameOrdered);*/
         /* Erzeuge sortierte Liste nach Nachname */
         /* Gebe Liste aus */
         /* Räume erzeugte Liste auf */
